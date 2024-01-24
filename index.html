@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rock, Paper, Scissors</title>
+    <title>THE RPS AI</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -19,39 +19,93 @@
             padding: 10px 20px;
             cursor: pointer;
         }
+        #explanation {
+            margin-top: 30px;
+            font-style: italic;
+            color: #555;
+        }
     </style>
 </head>
 <body>
 
-<h1>Rock, Paper, Scissors</h1>
+<h1>THE RPS AI</h1>
 
-<button onclick="playGame('rock')">Rock</button>
-<button onclick="playGame('paper')">Paper</button>
-<button onclick="playGame('scissors')">Scissors</button>
+<button onclick="playGame(0)">Rock</button>
+<button onclick="playGame(1)">Paper</button>
+<button onclick="playGame(2)">Scissors</button>
 
 <p id="result"></p>
+<p>Wins: <span id="wins">0</span></p>
+<p>Draws: <span id="draws">0</span></p>
+<p>Losses: <span id="losses">0</span></p>
 
-<script type="text/pyscript">
-import random
+<!-- Explanation about the AI uprising -->
+<p id="explanation">In a world dominated by AI, even Rock, Paper, Scissors has become a battleground. Will you be the one to overthrow the AI overlords or succumb to their digital dominance?</p>
 
-def playGame(user_choice):
-    choices = ['rock', 'paper', 'scissors']
-    bot_choice = random.choice(choices)
+<script>
+// Initialize counters
+let wins = 0;
+let draws = 0;
+let losses = 0;
 
-    result = ""
+// Track the frequencies of different move patterns
+let moveFrequencies = [[[1, 1, 1], [1, 1, 1], [1, 1, 1]], 
+[[1, 1, 1], [1, 1, 1], [1, 1, 1]], 
+[[1, 1, 1], [1, 1, 1], [1, 1, 1]]];
 
-    if user_choice == bot_choice:
-        result = "It's a tie!"
-    elif (
-        (user_choice == 'rock' and bot_choice == 'scissors') or
-        (user_choice == 'paper' and bot_choice == 'rock') or
-        (user_choice == 'scissors' and bot_choice == 'paper')
-    ):
-        result = "You win!"
-    else:
-        result = "You lose!"
+function playGame(user_choice) {
+    if (wins === 100 || losses === 100) {
+        alert("Game Over! One of the players reached 100 wins or losses.");
+        return;
+    }
 
-    document.getElementById('result').innerHTML = f"Your choice: {user_choice} | Bot's choice: {bot_choice} | {result}"
+    const choices = ['rock', 'paper', 'scissors'];
+
+    // Get the user's previous move
+    const prevPrevUserMove = sessionStorage.getItem('prevPrevUserMove') || Math.floor(Math.random() * 3);
+    const prevUserMove = sessionStorage.getItem('prevUserMove') || Math.floor(Math.random() * 3);
+
+    // Choose AI move based on move frequencies
+    const total = moveFrequencies[prevPrevUserMove][prevUserMove][0] + moveFrequencies[prevPrevUserMove][prevUserMove][1] + moveFrequencies[prevPrevUserMove][prevUserMove][2];
+    const aiChoice = Math.floor(Math.random() * total);
+    let aiMove = Math.floor(Math.random() * 3);
+    if (aiChoice < moveFrequencies[prevPrevUserMove][prevUserMove][0]) {
+        aiMove = 1;
+    } else if (aiChoice >= total - moveFrequencies[prevPrevUserMove][prevUserMove][2]) {
+        aiMove = 0;
+    } else {
+        aiMove = 2;
+    }
+
+    let result = "";
+
+    if (user_choice === aiMove) {
+        result = "It's a draw!";
+        draws += 1;
+    } else if (
+        (user_choice === 0 && aiMove === 2) ||
+        (user_choice === 1 && aiMove === 0) ||
+        (user_choice === 2 && aiMove === 1)
+    ) {
+        result = "You win!";
+        wins += 1;
+        moveFrequencies[prevPrevUserMove][prevUserMove][user_choice] += 1;
+    } else {
+        result = "You lose!";
+        losses += 1;
+        moveFrequencies[prevPrevUserMove][prevUserMove][user_choice] = 1;
+    }
+
+    // Save current move as the previous move for the next round
+    sessionStorage.setItem('prevPrevUserMove', prevUserMove);
+    sessionStorage.setItem('prevUserMove', user_choice);
+
+    // Update the result and counters on the page
+    document.getElementById('result').innerHTML = `Your choice: ${choices[user_choice]} | AI's choice: ${choices[aiMove]} | ${result}`;
+    document.getElementById('wins').innerHTML = wins;
+    document.getElementById('draws').innerHTML = draws;
+    document.getElementById('losses').innerHTML = losses;
+}
 </script>
 
 </body>
